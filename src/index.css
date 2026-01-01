@@ -1,0 +1,184 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 173 80% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 190 95% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 173 80% 36%;
+
+    --radius: 0.75rem;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 210 100% 50%;
+    --info-foreground: 0 0% 100%;
+
+    --code-background: 220 14% 96%;
+    --code-foreground: 222 47% 11%;
+    --gradient-primary: linear-gradient(135deg, hsl(173 80% 36%), hsl(190 95% 39%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 14% 96%) 0%, hsl(220 20% 98%) 100%);
+    --shadow-glow: 0 0 40px hsl(173 80% 36% / 0.15);
+    --shadow-card: 0 4px 24px hsl(222 47% 11% / 0.08);
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 173 80% 44%;
+    --primary-foreground: 222 47% 8%;
+
+    --secondary: 222 30% 16%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 30% 16%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 190 95% 45%;
+    --accent-foreground: 222 47% 8%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 30% 20%;
+    --input: 222 30% 20%;
+    --ring: 173 80% 44%;
+
+    --success: 142 70% 45%;
+    --success-foreground: 222 47% 8%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 8%;
+
+    --info: 210 100% 60%;
+    --info-foreground: 222 47% 8%;
+
+    --code-background: 222 47% 14%;
+    --code-foreground: 210 40% 98%;
+    --gradient-primary: linear-gradient(135deg, hsl(173 80% 44%), hsl(190 95% 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(222 47% 8%) 0%, hsl(222 47% 12%) 100%);
+    --shadow-glow: 0 0 60px hsl(173 80% 44% / 0.2);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .gradient-bg {
+    background-image: var(--gradient-primary);
+  }
+
+  .glass-card {
+    @apply backdrop-blur-xl border border-border/50;
+    background: hsl(var(--card) / 0.8);
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+
+  .code-block {
+    @apply rounded-lg p-4 font-mono text-sm;
+    background: hsl(var(--code-bg));
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
