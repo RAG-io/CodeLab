@@ -79,6 +79,7 @@ export default function AdminDashboard() {
       const { data: subs, error: subsError } = await supabase
         .from('code_submissions')
         .select('*')
+        .eq('is_latest', true)
         .order('created_at', { ascending: false });
 
       if (subsError) throw subsError;

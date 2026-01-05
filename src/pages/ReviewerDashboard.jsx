@@ -48,6 +48,7 @@ export default function ReviewerDashboard() {
         .select('*')
         .or(`reviewer_id.eq.${user.id},reviewer_id.is.null`)
         .in('status', ['pending', 'in_review'])
+        .eq('is_latest', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -55,13 +56,13 @@ export default function ReviewerDashboard() {
       // Fetch developer names separately
       const developerIds = [...new Set(subs.map(s => s.developer_id))];
       let developerMap = {};
-      
+
       if (developerIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
           .select('user_id, name')
           .in('user_id', developerIds);
-        
+
         if (profiles) {
           developerMap = profiles.reduce((acc, p) => {
             acc[p.user_id] = p.name;
@@ -99,13 +100,13 @@ export default function ReviewerDashboard() {
       // Fetch developer names separately
       const developerIds = [...new Set(subs.map(s => s.developer_id))];
       let developerMap = {};
-      
+
       if (developerIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
           .select('user_id, name')
           .in('user_id', developerIds);
-        
+
         if (profiles) {
           developerMap = profiles.reduce((acc, p) => {
             acc[p.user_id] = p.name;
@@ -209,15 +210,15 @@ export default function ReviewerDashboard() {
     try {
       const { error } = await supabase
         .from('code_submissions')
-        .update({ 
+        .update({
           status: 'in_review',
-          reviewer_id: user.id 
+          reviewer_id: user.id
         })
         .eq('id', assignment.id);
 
       if (error) throw error;
 
-      setAssignments(assignments.map(a => 
+      setAssignments(assignments.map(a =>
         a.id === assignment.id ? { ...a, status: 'in_review', reviewer_id: user.id } : a
       ));
       handleSelectReview({ ...assignment, status: 'in_review' });
@@ -267,7 +268,10 @@ export default function ReviewerDashboard() {
 
       const { error } = await supabase
         .from('code_submissions')
-        .update({ status: 'approved' })
+        .update({
+          status: 'approved',
+          reviewer_id: user.id // Ensure we claim it if we haven't already
+        })
         .eq('id', selectedReview.id);
 
       if (error) throw error;
@@ -367,11 +371,10 @@ export default function ReviewerDashboard() {
         {/* Stats / Tabs */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {stats.map((stat, index) => (
-            <div 
-              key={index} 
-              className={`p-5 rounded-xl border bg-card card-shadow cursor-pointer transition-all hover:scale-[1.02] ${
-                activeTab === stat.tab ? 'border-primary ring-2 ring-primary/20' : 'border-border'
-              }`}
+            <div
+              key={index}
+              className={`p-5 rounded-xl border bg-card card-shadow cursor-pointer transition-all hover:scale-[1.02] ${activeTab === stat.tab ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+                }`}
               onClick={() => setActiveTab(stat.tab)}
             >
               <div className="flex items-center gap-3">
@@ -409,9 +412,8 @@ export default function ReviewerDashboard() {
                 {displayedSubmissions.map((assignment) => (
                   <div
                     key={assignment.id}
-                    className={`p-4 hover:bg-secondary/20 transition-colors cursor-pointer ${
-                      selectedReview?.id === assignment.id ? 'bg-primary/5 border-l-2 border-l-primary' : ''
-                    }`}
+                    className={`p-4 hover:bg-secondary/20 transition-colors cursor-pointer ${selectedReview?.id === assignment.id ? 'bg-primary/5 border-l-2 border-l-primary' : ''
+                      }`}
                     onClick={() => handleSelectReview(assignment)}
                   >
                     <div className="flex items-start justify-between gap-4">
@@ -492,8 +494,8 @@ export default function ReviewerDashboard() {
                     <AlertTriangle className="h-4 w-4 text-warning" />
                     <h3 className="font-medium">Static Analysis Results (ESLint)</h3>
                   </div>
-                  <CodeAnalyzer 
-                    code={selectedReview.code_content} 
+                  <CodeAnalyzer
+                    code={selectedReview.code_content}
                     onAnalysisComplete={(issues) => {
                       // Store issues for later use when approving/requesting changes
                       window._currentAnalysisIssues = issues;

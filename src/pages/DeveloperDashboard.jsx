@@ -42,6 +42,8 @@ export default function DeveloperDashboard() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentSubmissionId, setCurrentSubmissionId] = useState(null);
+  const [currentGroupId, setCurrentGroupId] = useState(null);
+  const [currentVersion, setCurrentVersion] = useState(1);
   const [reviewComments, setReviewComments] = useState([]);
   const [activeFilter, setActiveFilter] = useState(null);
 
@@ -85,7 +87,20 @@ export default function DeveloperDashboard() {
         reviewer: s.reviewer_id ? { name: reviewerMap[s.reviewer_id] } : null
       }));
 
-      setSubmissions(enrichedSubs || []);
+      // Group submissions by group_id and select the latest version for each group
+      const latestSubmissionsMap = new Map();
+
+      enrichedSubs.forEach(sub => {
+        const existing = latestSubmissionsMap.get(sub.group_id);
+        if (!existing || sub.version > existing.version) {
+          latestSubmissionsMap.set(sub.group_id, sub);
+        }
+      });
+
+      // Convert map back to array
+      const latestSubmissions = Array.from(latestSubmissionsMap.values());
+
+      setSubmissions(latestSubmissions || []);
     } catch (error) {
       console.error('Error fetching submissions:', error);
       toast.error('Failed to load submissions');
@@ -215,22 +230,25 @@ export default function DeveloperDashboard() {
 
     setSubmitting(true);
     try {
-      if (isEditing && currentSubmissionId) {
+      if (isEditing && currentGroupId) {
+        // RESUBMITTING: Create a NEW version (INSERT) instead of updating
         const { error } = await supabase
           .from('code_submissions')
-          .update({
+          .insert({
             title: uploadForm.title,
             description: uploadForm.description,
             file_name: uploadForm.fileName || 'code.js',
             code_content: uploadForm.code,
-            status: 'pending', // Reset status to pending on resubmit
-          })
-          .eq('id', currentSubmissionId)
-          .eq('developer_id', user.id);
+            status: 'pending',
+            developer_id: user.id,
+            group_id: currentGroupId, // Link to the same group
+            version: currentVersion + 1 // Increment version
+          });
 
         if (error) throw error;
-        toast.success('Submission updated and resubmitted!');
+        toast.success('New version submitted successfully!');
       } else {
+        // NEW SUBMISSION
         const { error } = await supabase
           .from('code_submissions')
           .insert({
@@ -239,6 +257,7 @@ export default function DeveloperDashboard() {
             file_name: uploadForm.fileName || 'code.js',
             code_content: uploadForm.code,
             developer_id: user.id,
+            // version defaults to 1, group_id defaults to random UUID
           });
 
         if (error) throw error;
@@ -248,6 +267,8 @@ export default function DeveloperDashboard() {
       setUploadForm({ title: '', description: '', code: '', fileName: '' });
       setIsEditing(false);
       setCurrentSubmissionId(null);
+      setCurrentGroupId(null);
+      setCurrentVersion(1);
       setShowUploadModal(false);
       fetchSubmissions();
     } catch (error) {
@@ -295,6 +316,8 @@ export default function DeveloperDashboard() {
     });
     setIsEditing(true);
     setCurrentSubmissionId(submission.id);
+    setCurrentGroupId(submission.group_id); // Track Group ID
+    setCurrentVersion(submission.version || 1); // Track current version
     setShowUploadModal(true);
   };
 
@@ -322,6 +345,8 @@ export default function DeveloperDashboard() {
           <Button variant="primary" onClick={() => {
             setIsEditing(false);
             setCurrentSubmissionId(null);
+            setCurrentGroupId(null);
+            setCurrentVersion(1);
             setUploadForm({ title: '', description: '', code: '', fileName: '' });
             setShowUploadModal(true);
           }}>
@@ -395,6 +420,11 @@ export default function DeveloperDashboard() {
                         <code className="text-sm px-2 py-1 rounded bg-secondary font-mono">
                           {submission.file_name}
                         </code>
+                        {submission.version > 1 && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-accent/10 text-accent border border-accent/20">
+                            v{submission.version}
+                          </span>
+                        )}
                       </td>
                       <td className="p-4">{getStatusBadge(submission.status)}</td>
                       <td className="p-4 text-muted-foreground">
@@ -446,7 +476,7 @@ export default function DeveloperDashboard() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
             <div className="w-full max-w-2xl mx-4 p-6 rounded-xl border border-border bg-card card-shadow animate-slide-up max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">{isEditing ? 'Edit & Resubmit Code' : 'Submit Code for Review'}</h2>
+                <h2 className="text-xl font-bold">{isEditing ? `Resubmit New Version (v${currentVersion + 1})` : 'Submit Code for Review'}</h2>
                 <Button variant="ghost" size="sm" onClick={() => setShowUploadModal(false)}>
                   <X className="h-4 w-4" />
                 </Button>
@@ -516,7 +546,14 @@ export default function DeveloperDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-bold">{selectedSubmission.title}</h2>
-                  <p className="text-sm text-muted-foreground">{selectedSubmission.file_name}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-sm text-muted-foreground">{selectedSubmission.file_name}</p>
+                    {selectedSubmission.version && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-accent/10 text-accent border border-accent/20">
+                        v{selectedSubmission.version}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(selectedSubmission.status)}
