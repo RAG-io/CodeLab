@@ -57,20 +57,29 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
+    // Basic client-side validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      toast.error('Please enter a valid email address format.');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: form.email,
+          email: form.email.trim(),
           password: form.password,
         });
 
         if (error) throw error;
-        
+
         toast.success('Logged in successfully!');
         redirectToDashboard(data.user.id);
       } else {
+        // console.log('Attempting to register with email:', `"${form.email.trim()}"`);
         const { data, error } = await supabase.auth.signUp({
-          email: form.email,
+          email: form.email.trim(),
           password: form.password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
@@ -97,13 +106,15 @@ export default function Auth() {
         redirectToDashboard(data.user.id);
       }
     } catch (error) {
-      console.error('Auth error:', error);
+      console.error('Auth Full Error Object:', JSON.stringify(error, null, 2));
+      console.error('Auth Error Message:', error.message);
+
       if (error.message.includes('User already registered')) {
         toast.error('This email is already registered. Please login instead.');
       } else if (error.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password.');
       } else {
-        toast.error(error.message || 'An error occurred');
+        toast.error(`Error: ${error.message} (Check console for details)`);
       }
     } finally {
       setLoading(false);
@@ -125,8 +136,8 @@ export default function Auth() {
               {isLogin ? 'Welcome back' : 'Create an account'}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {isLogin 
-                ? 'Sign in to your account to continue' 
+              {isLogin
+                ? 'Sign in to your account to continue'
                 : 'Join CodeReview Cloud today'}
             </p>
           </div>
@@ -197,11 +208,10 @@ export default function Auth() {
                       key={role}
                       type="button"
                       onClick={() => setForm({ ...form, role })}
-                      className={`p-3 rounded-lg border text-sm font-medium transition-all ${
-                        form.role === role
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border hover:border-primary/50'
-                      }`}
+                      className={`p-3 rounded-lg border text-sm font-medium transition-all ${form.role === role
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border hover:border-primary/50'
+                        }`}
                     >
                       {role.charAt(0).toUpperCase() + role.slice(1)}
                     </button>

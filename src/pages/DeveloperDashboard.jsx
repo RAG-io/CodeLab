@@ -262,11 +262,7 @@ export default function DeveloperDashboard() {
     if (!confirm('Are you sure you want to delete this submission? This action cannot be undone.')) return;
 
     try {
-      // 1. First delete related records (manual cascade to be safe)
-      await supabase.from('review_comments').delete().eq('submission_id', submissionId);
-      await supabase.from('static_analysis_results').delete().eq('submission_id', submissionId);
-
-      // 2. Then delete the submission
+      // The database handles cascading deletes for related records (comments, analysis results)
       const { error, count } = await supabase
         .from('code_submissions')
         .delete({ count: 'exact' }) // Request count of deleted rows
