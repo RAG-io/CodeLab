@@ -245,8 +245,21 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUser = async (userId) => {
-    // Note: In production, you'd want to soft delete or have proper admin controls
-    toast.info('User deletion requires database admin access');
+    if (!confirm('Are you sure you want to delete this user? This action CANNOT be undone and will delete all their submissions and data.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.rpc('delete_user', { target_user_id: userId });
+
+      if (error) throw error;
+
+      toast.success('User deleted successfully');
+      fetchData(); // Refresh the list
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user: ' + error.message);
+    }
   };
 
   const filteredUsers = users.filter(u =>
@@ -392,7 +405,9 @@ export default function AdminDashboard() {
                           <th className="text-left p-4 text-sm font-medium text-muted-foreground">User</th>
                           <th className="text-left p-4 text-sm font-medium text-muted-foreground">Role</th>
                           <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
+                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
                           <th className="text-left p-4 text-sm font-medium text-muted-foreground">Joined</th>
+                          <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -413,6 +428,17 @@ export default function AdminDashboard() {
                             </td>
                             <td className="p-4 text-muted-foreground text-sm">
                               {new Date(u.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="p-4 text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteUser(u.user_id)}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                title="Delete User"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </td>
                           </tr>
                         ))}
