@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import ReviewerDashboard from "./pages/ReviewerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,12 +35,13 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<Auth />} />
               <Route path="/register" element={<Auth />} />
-              
+
               {/* Protected Routes */}
               <Route path="/developer" element={<DeveloperDashboard />} />
               <Route path="/reviewer" element={<ReviewerDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
-              
+              <Route path="/profile" element={<Profile />} />
+
               {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>

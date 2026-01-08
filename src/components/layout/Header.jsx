@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/button';
-import { Code2, Menu, X, Moon, Sun, LogOut, LayoutDashboard } from 'lucide-react';
+import { Code2, Menu, X, Moon, Sun, LogOut, LayoutDashboard, User } from 'lucide-react';
 
 export default function Header() {
   const { isDark, toggleTheme } = useTheme();
@@ -52,11 +52,10 @@ export default function Header() {
               <Link
                 key={link.to}
                 to={link.to}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive(link.to)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(link.to)
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                  }`}
               >
                 {link.label}
               </Link>
@@ -90,6 +89,14 @@ export default function Header() {
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   Dashboard
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate('/profile')}
+                  className="gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Profile
                 </Button>
                 <Button variant="outline" onClick={handleLogout} className="gap-2">
                   <LogOut className="h-4 w-4" />
@@ -133,11 +140,10 @@ export default function Header() {
                   key={link.to}
                   to={link.to}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(link.to)
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-secondary'
-                  }`}
+                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive(link.to)
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-secondary'
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -155,6 +161,17 @@ export default function Header() {
                     >
                       <LayoutDashboard className="h-4 w-4" />
                       Dashboard
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start gap-2"
+                      onClick={() => {
+                        navigate('/profile');
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <User className="h-4 w-4" />
+                      Profile
                     </Button>
                     <Button
                       variant="outline"
