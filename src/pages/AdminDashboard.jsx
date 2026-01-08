@@ -579,51 +579,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Static Analysis Results - Admin can always see */}
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-warning" />
-                  <h3 className="font-medium">Static Analysis Results</h3>
-                </div>
-                {analysisResults.length === 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground mb-2">No stored analysis. Running live analysis:</p>
-                    <CodeAnalyzer code={selectedSubmission.code_content} />
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {analysisResults.map((result) => (
-                      <div
-                        key={result.id}
-                        className={`p-3 rounded-lg border ${result.severity === 'error'
-                          ? 'border-destructive/30 bg-destructive/5'
-                          : result.severity === 'warning'
-                            ? 'border-warning/30 bg-warning/5'
-                            : 'border-info/30 bg-info/5'
-                          }`}
-                      >
-                        <div className="flex items-start gap-2">
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded ${result.severity === 'error'
-                            ? 'bg-destructive/10 text-destructive'
-                            : result.severity === 'warning'
-                              ? 'bg-warning/10 text-warning'
-                              : 'bg-info/10 text-info'
-                            }`}>
-                            {result.severity.toUpperCase()}
-                          </span>
-                          <div className="flex-1">
-                            <p className="text-sm">
-                              {result.line_number && <span className="text-muted-foreground">Line {result.line_number}: </span>}
-                              {result.message}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">Rule: {result.rule_id}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+
 
               <div className="flex justify-end mt-4">
                 <Button variant="outline" onClick={() => setSelectedSubmission(null)}>
