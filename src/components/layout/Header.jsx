@@ -12,10 +12,20 @@ export default function Header() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const getHomeRoute = () => {
+    if (!user) return '/';
+    switch (user.role) {
+      case 'admin': return '/admin';
+      case 'developer': return '/developer';
+      case 'reviewer': return '/reviewer';
+      default: return '/';
+    }
+  };
+
   const navLinks = [
     {
-      to: user?.role === 'admin' ? '/admin' : '/',
-      label: user?.role === 'admin' ? 'Dashboard' : 'Home'
+      to: getHomeRoute(),
+      label: user ? 'Dashboard' : 'Home'
     },
     { to: '/about', label: 'About' },
     { to: '/contact', label: 'Contact' },
