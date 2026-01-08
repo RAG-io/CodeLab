@@ -13,7 +13,10 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { to: '/', label: 'Home' },
+    {
+      to: user?.role === 'admin' ? '/admin' : '/',
+      label: user?.role === 'admin' ? 'Dashboard' : 'Home'
+    },
     { to: '/about', label: 'About' },
     { to: '/contact', label: 'Contact' },
   ];
@@ -82,14 +85,7 @@ export default function Header() {
             {/* Auth Buttons */}
             {user ? (
               <div className="hidden md:flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate(getDashboardLink())}
-                  className="gap-2"
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
-                </Button>
+
                 <Button
                   variant="ghost"
                   onClick={() => navigate('/profile')}
@@ -151,17 +147,7 @@ export default function Header() {
               <div className="border-t border-border mt-2 pt-4 flex flex-col gap-2">
                 {user ? (
                   <>
-                    <Button
-                      variant="ghost"
-                      className="justify-start gap-2"
-                      onClick={() => {
-                        navigate(getDashboardLink());
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard
-                    </Button>
+
                     <Button
                       variant="ghost"
                       className="justify-start gap-2"
