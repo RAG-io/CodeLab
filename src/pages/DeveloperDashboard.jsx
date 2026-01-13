@@ -162,17 +162,78 @@ export default function DeveloperDashboard() {
     }
   };
 
+  const [submissionHistory, setSubmissionHistory] = useState([]);
+
+  const fetchSubmissionHistory = async (groupId) => {
+    try {
+      // 1. Fetch all versions for this group
+      const { data: versions, error: versionsError } = await supabase
+        .from('code_submissions')
+        .select('*')
+        .eq('group_id', groupId)
+        .order('version', { ascending: true });
+
+      if (versionsError) throw versionsError;
+
+      // 2. Fetch comments for ALL versions
+      const versionIds = versions.map(v => v.id);
+      const { data: comments, error: commentsError } = await supabase
+        .from('review_comments')
+        .select('*')
+        .in('submission_id', versionIds)
+        .order('created_at', { ascending: true });
+
+      if (commentsError) throw commentsError;
+
+      // 3. Helper to fetch reviewer names (deduplicated)
+      const reviewerIds = [...new Set(comments.map(c => c.reviewer_id))];
+      let reviewerMap = {};
+
+      if (reviewerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, name')
+          .in('user_id', reviewerIds);
+
+        if (profiles) {
+          reviewerMap = profiles.reduce((acc, p) => {
+            acc[p.user_id] = p.name;
+            return acc;
+          }, {});
+        }
+      }
+
+      // 4. Combine versions with their specific comments
+      const history = versions.map(v => ({
+        ...v,
+        comments: comments.filter(c => c.submission_id === v.id).map(c => ({
+          ...c,
+          reviewer_name: reviewerMap[c.reviewer_id] || 'Reviewer'
+        }))
+      }));
+
+      setSubmissionHistory(history);
+    } catch (error) {
+      console.error('Error fetching history:', error);
+      toast.error('Failed to load submission history');
+    }
+  };
+
   const handleViewSubmission = async (submission) => {
     setSelectedSubmission(submission);
-    // Developers can only see analysis results and comments after review is complete
+    // Fetch full history if group_id exists
+    if (submission.group_id) {
+      await fetchSubmissionHistory(submission.group_id);
+    } else {
+      // Fallback for old/legacy items without group_id (treat as single version)
+      setSubmissionHistory([{ ...submission, comments: [] }]);
+    }
+
+    // Also fetch analysis for the CURRENT selection (optional, or we can fetch for all if needed, but keeping it simple)
     if (['approved', 'changes_requested'].includes(submission.status)) {
-      await Promise.all([
-        fetchAnalysisResults(submission.id),
-        fetchReviewComments(submission.id)
-      ]);
+      await fetchAnalysisResults(submission.id);
     } else {
       setAnalysisResults([]);
-      setReviewComments([]);
     }
   };
 
@@ -563,78 +624,62 @@ export default function DeveloperDashboard() {
                 </div>
               </div>
 
-              {/* Code View with Line Numbers */}
-              <div className="mb-4">
-                <h3 className="font-medium mb-2">Source Code</h3>
-                <div className="rounded-lg border border-border bg-code-background max-h-[300px] overflow-auto">
-                  <pre className="p-4 text-sm font-mono">
-                    {selectedSubmission.code_content.split('\n').map((line, index) => (
-                      <div key={index} className="flex">
-                        <span className="w-10 text-right pr-4 text-muted-foreground select-none">{index + 1}</span>
-                        <code className="text-code-foreground">{line}</code>
+              {/* Submission History Loop */}
+              <div className="space-y-8">
+                {submissionHistory.map((versionItem, index) => (
+                  <div key={versionItem.id} className="relative border-l-2 border-border pl-6 pb-2">
+                    {/* Timeline Node */}
+                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary border-4 border-background" />
+
+                    <div className="mb-4">
+                      <h3 className="text-lg font-bold flex items-center gap-2">
+                        Version {versionItem.version}
+                        <span className="text-sm font-normal text-muted-foreground">
+                          ({new Date(versionItem.created_at).toLocaleString()})
+                        </span>
+                        {versionItem.id === selectedSubmission.id && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Current</span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-2">Status: {getStatusBadge(versionItem.status)}</p>
+
+                      {/* Code Snippet (Collapsible or Preview could be good, but showing full for now as requested) */}
+                      <div className="rounded-lg border border-border bg-code-background max-h-[200px] overflow-auto mb-3">
+                        <pre className="p-4 text-xs font-mono text-muted-foreground">
+                          {versionItem.code_content}
+                        </pre>
                       </div>
-                    ))}
-                  </pre>
-                </div>
-              </div>
-
-
-
-              {/* Reviewer Comments - Only visible after review */}
-              {['approved', 'changes_requested'].includes(selectedSubmission.status) && (
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                    <h3 className="font-medium">Reviewer Comments</h3>
-                  </div>
-                  {reviewComments.length === 0 ? (
-                    <div className="p-4 rounded-lg border border-border bg-secondary/30 text-center text-muted-foreground">
-                      No reviewer comments
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {reviewComments.map((comment) => (
-                        <div
-                          key={comment.id}
-                          className="p-4 rounded-lg border border-border bg-secondary/20"
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-xs font-medium text-primary">
-                                {comment.reviewer_name?.charAt(0).toUpperCase() || 'R'}
-                              </span>
+
+                    {/* Comments for this Version */}
+                    <div className="mb-4">
+                      {versionItem.comments && versionItem.comments.length > 0 ? (
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
+                            <MessageSquare className="h-4 w-4 text-primary" />
+                            Reviewer Comments
+                          </h4>
+                          {versionItem.comments.map((comment) => (
+                            <div key={comment.id} className="p-3 rounded-lg border border-border bg-secondary/20">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="font-semibold text-sm text-primary">{comment.reviewer_name}</span>
+                                <span className="text-xs text-muted-foreground">{new Date(comment.created_at).toLocaleString()}</span>
+                              </div>
+                              <p className="text-sm">{comment.comment_text}</p>
                             </div>
-                            <div>
-                              <p className="text-sm font-medium">{comment.reviewer_name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(comment.created_at).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-sm text-foreground whitespace-pre-wrap">{comment.content}</p>
+                          ))}
                         </div>
-                      ))}
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic pl-1">No comments for this version.</p>
+                      )}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {!['approved', 'changes_requested'].includes(selectedSubmission.status) && (
-                <div className="p-4 rounded-lg border border-border bg-secondary/30 text-center text-muted-foreground">
-                  <AlertCircle className="h-5 w-5 mx-auto mb-2" />
-                  <p className="text-sm">Review feedback will be available after the review is complete.</p>
-                </div>
-              )}
-
-              <div className="flex justify-end mt-4">
-                <Button variant="outline" onClick={() => setSelectedSubmission(null)}>
-                  Close
-                </Button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         )}
       </div>
-    </Layout>
+    </Layout >
   );
 }
