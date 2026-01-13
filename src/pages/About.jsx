@@ -1,9 +1,9 @@
 import Layout from '../components/layout/Layout';
-import { 
-  Target, 
-  Users, 
-  Zap, 
-  Shield, 
+import {
+  Target,
+  Users,
+  Zap,
+  Shield,
   Globe,
   Award,
   Code2,
@@ -35,10 +35,8 @@ export default function About() {
   ];
 
   const team = [
-    { name: 'Alex Johnson', role: 'Founder & CEO', avatar: 'AJ' },
-    { name: 'Sarah Chen', role: 'CTO', avatar: 'SC' },
-    { name: 'Mike Rodriguez', role: 'Lead Developer', avatar: 'MR' },
-    { name: 'Emily Watson', role: 'Product Manager', avatar: 'EW' },
+    { name: 'RAG', role: 'Founder & CEO', avatar: 'R' },
+    { name: 'Sanjay', role: 'CTO', avatar: 'S' },
   ];
 
   return (
@@ -48,7 +46,7 @@ export default function About() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center animate-slide-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
@@ -60,8 +58,8 @@ export default function About() {
               <span className="gradient-text">Simple & Effective</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              CodeReview was built with a simple goal: to help development teams 
-              collaborate better and ship higher quality code through efficient, 
+              CodeReview was built with a simple goal: to help development teams
+              collaborate better and ship higher quality code through efficient,
               cloud-based code reviews.
             </p>
           </div>
@@ -76,17 +74,17 @@ export default function About() {
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  CodeReview was born from the frustration of managing code reviews 
-                  across scattered tools and email threads. As developers ourselves, 
+                  CodeReview was born from the frustration of managing code reviews
+                  across scattered tools and email threads. As developers ourselves,
                   we knew there had to be a better way.
                 </p>
                 <p>
-                  We built a platform that centralizes the entire code review process 
-                  in the cloud, making it easy for developers to submit code, reviewers 
+                  We built a platform that centralizes the entire code review process
+                  in the cloud, making it easy for developers to submit code, reviewers
                   to provide feedback, and administrators to manage the workflow.
                 </p>
                 <p>
-                  Today, CodeReview is trusted by thousands of developers and hundreds 
+                  Today, CodeReview is trusted by thousands of developers and hundreds
                   of companies worldwide to maintain code quality and foster collaboration.
                 </p>
               </div>
@@ -159,18 +157,18 @@ export default function About() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto">
             {team.map((member, index) => (
               <div
                 key={index}
-                className="group p-6 rounded-xl border border-border bg-card hover:border-primary/50 transition-all duration-300 text-center animate-fade-in"
+                className="group p-8 rounded-2xl border border-border bg-card hover:border-primary/50 transition-all duration-300 text-center animate-fade-in w-full max-w-xs"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="w-20 h-20 mx-auto rounded-full gradient-bg flex items-center justify-center mb-4 text-xl font-bold text-primary-foreground">
+                <div className="w-24 h-24 mx-auto rounded-full gradient-bg flex items-center justify-center mb-6 text-3xl font-bold text-primary-foreground group-hover:scale-110 transition-transform duration-300">
                   {member.avatar}
                 </div>
-                <h3 className="font-semibold">{member.name}</h3>
-                <p className="text-sm text-muted-foreground">{member.role}</p>
+                <h3 className="text-xl font-bold mb-1">{member.name}</h3>
+                <p className="text-muted-foreground">{member.role}</p>
               </div>
             ))}
           </div>
@@ -186,8 +184,8 @@ export default function About() {
               Built by Developers, for Developers
             </h2>
             <p className="text-muted-foreground">
-              We understand the challenges of code reviews because we've been there. 
-              That's why we're committed to building the best possible experience 
+              We understand the challenges of code reviews because we've been there.
+              That's why we're committed to building the best possible experience
               for development teams everywhere.
             </p>
           </div>
