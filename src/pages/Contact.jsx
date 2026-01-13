@@ -46,7 +46,7 @@ export default function Contact() {
     {
       icon: Mail,
       title: 'Email',
-      value: 'support@codereview.dev',
+      value: 'support@codelab.dev',
       description: 'Send us an email anytime',
     },
     {
@@ -97,7 +97,7 @@ export default function Contact() {
               <span className="gradient-text">Hear From You</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Have questions about CodeReview? Want to learn more about our platform?
+              Have questions about CodeLab? Want to learn more about our platform?
               We're here to help!
             </p>
           </div>

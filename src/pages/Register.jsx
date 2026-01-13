@@ -52,7 +52,7 @@ export default function Register() {
     });
 
     toast.success('Account created successfully!');
-    
+
     // Redirect based on role
     switch (formData.role) {
       case 'admin':
@@ -64,7 +64,7 @@ export default function Register() {
       default:
         navigate('/developer');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -108,7 +108,7 @@ export default function Register() {
             <div className="p-2 rounded-lg gradient-bg">
               <Code2 className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-xl">CodeReview</span>
+            <span className="font-bold text-xl">CodeLab</span>
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Create an account</h1>

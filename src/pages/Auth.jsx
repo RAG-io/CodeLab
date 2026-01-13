@@ -138,7 +138,7 @@ export default function Auth() {
             <p className="text-muted-foreground mt-1">
               {isLogin
                 ? 'Sign in to your account to continue'
-                : 'Join CodeReview Cloud today'}
+                : 'Join CodeLab Cloud today'}
             </p>
           </div>
 

@@ -58,7 +58,7 @@ export default function About() {
               <span className="gradient-text">Simple & Effective</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              CodeReview was built with a simple goal: to help development teams
+              CodeLab was built with a simple goal: to help development teams
               collaborate better and ship higher quality code through efficient,
               cloud-based code reviews.
             </p>
@@ -74,7 +74,7 @@ export default function About() {
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  CodeReview was born from the frustration of managing code reviews
+                  CodeLab was born from the frustration of managing code reviews
                   across scattered tools and email threads. As developers ourselves,
                   we knew there had to be a better way.
                 </p>
@@ -84,7 +84,7 @@ export default function About() {
                   to provide feedback, and administrators to manage the workflow.
                 </p>
                 <p>
-                  Today, CodeReview is trusted by thousands of developers and hundreds
+                  Today, CodeLab is trusted by thousands of developers and hundreds
                   of companies worldwide to maintain code quality and foster collaboration.
                 </p>
               </div>
@@ -123,7 +123,7 @@ export default function About() {
               Our <span className="gradient-text">Values</span>
             </h2>
             <p className="text-muted-foreground">
-              The principles that guide everything we do at CodeReview.
+              The principles that guide everything we do at CodeLab.
             </p>
           </div>
 
@@ -153,7 +153,7 @@ export default function About() {
               Meet Our <span className="gradient-text">Team</span>
             </h2>
             <p className="text-muted-foreground">
-              The passionate people behind CodeReview.
+              The passionate people behind CodeLab.
             </p>
           </div>
 

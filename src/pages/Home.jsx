@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { Button } from '../components/ui/button';
-import { 
-  Code2, 
-  Upload, 
-  MessageSquare, 
-  Shield, 
-  Users, 
-  Zap, 
+import {
+  Code2,
+  Upload,
+  MessageSquare,
+  Shield,
+  Users,
+  Zap,
   CheckCircle2,
   ArrowRight,
   GitBranch,
@@ -95,18 +95,18 @@ export default function Home() {
               <GitBranch className="h-4 w-4" />
               Cloud-Powered Code Reviews
             </div>
-            
+
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               Streamline Your{' '}
               <span className="gradient-text">Code Review</span>{' '}
               Process
             </h1>
-            
+
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              A modern cloud-based platform that brings developers and reviewers together 
+              A modern cloud-based platform that brings developers and reviewers together
               for efficient, collaborative code reviews.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button variant="hero" size="xl" asChild>
                 <Link to="/register">
@@ -154,8 +154,8 @@ function calculateTotal(items) {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="text-center animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -217,7 +217,7 @@ function calculateTotal(items) {
           <div className="grid md:grid-cols-4 gap-6 relative">
             {/* Connection Line */}
             <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-primary via-accent to-primary" />
-            
+
             {workflowSteps.map((step, index) => (
               <div
                 key={index}
@@ -246,11 +246,11 @@ function calculateTotal(items) {
               Ready to Improve Your Code Quality?
             </h2>
             <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-              Join thousands of developers who are already using CodeReview to ship better code faster.
+              Join thousands of developers who are already using CodeLab to ship better code faster.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="bg-background text-foreground hover:bg-background/90"
                 asChild
               >
@@ -259,8 +259,8 @@ function calculateTotal(items) {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
                 className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
                 asChild

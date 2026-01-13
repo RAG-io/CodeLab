@@ -22,7 +22,7 @@ export default function Footer() {
               <div className="p-2 rounded-lg gradient-bg">
                 <Code2 className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg">CodeReview</span>
+              <span className="font-bold text-lg">CodeLab</span>
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs">
               A cloud-based code review platform that streamlines collaboration between developers and reviewers for better code quality.
@@ -77,7 +77,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-t border-border mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            © {currentYear} CodeReview. All rights reserved.
+            © {currentYear} CodeLab. All rights reserved.
           </p>
         </div>
       </div>

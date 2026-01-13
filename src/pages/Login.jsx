@@ -34,7 +34,7 @@ export default function Login() {
     });
 
     toast.success('Login successful!');
-    
+
     // Redirect based on role
     switch (role) {
       case 'admin':
@@ -46,7 +46,7 @@ export default function Login() {
       default:
         navigate('/developer');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -64,7 +64,7 @@ export default function Login() {
             <div className="p-2 rounded-lg gradient-bg">
               <Code2 className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-xl">CodeReview</span>
+            <span className="font-bold text-xl">CodeLab</span>
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
@@ -177,7 +177,7 @@ export default function Login() {
           {/* Demo Hint */}
           <div className="mt-6 p-4 rounded-lg bg-secondary/50 border border-border">
             <p className="text-xs text-muted-foreground text-center">
-              <strong>Demo:</strong> Use email with "admin" for Admin, "reviewer" for Reviewer, 
+              <strong>Demo:</strong> Use email with "admin" for Admin, "reviewer" for Reviewer,
               or any other email for Developer role.
             </p>
           </div>
@@ -194,7 +194,7 @@ export default function Login() {
             Streamline Your Code Reviews
           </h2>
           <p className="text-primary-foreground/80">
-            Join thousands of developers who use CodeReview to collaborate 
+            Join thousands of developers who use CodeLab to collaborate
             and ship better code faster.
           </p>
         </div>
