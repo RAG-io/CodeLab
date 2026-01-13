@@ -665,7 +665,7 @@ export default function DeveloperDashboard() {
                                 <span className="font-semibold text-sm text-primary">{comment.reviewer_name}</span>
                                 <span className="text-xs text-muted-foreground">{new Date(comment.created_at).toLocaleString()}</span>
                               </div>
-                              <p className="text-sm">{comment.content}</p>
+                              <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
                             </div>
                           ))}
                         </div>

@@ -126,6 +126,58 @@ export default function ReviewerDashboard() {
     }
   };
 
+  const [submissionHistory, setSubmissionHistory] = useState([]);
+
+  const fetchSubmissionHistory = async (groupId) => {
+    try {
+      const { data: versions, error: versionsError } = await supabase
+        .from('code_submissions')
+        .select('*')
+        .eq('group_id', groupId)
+        .order('version', { ascending: true });
+
+      if (versionsError) throw versionsError;
+
+      const versionIds = versions.map(v => v.id);
+      const { data: comments, error: commentsError } = await supabase
+        .from('review_comments')
+        .select('*')
+        .in('submission_id', versionIds)
+        .order('created_at', { ascending: true });
+
+      if (commentsError) throw commentsError;
+
+      const reviewerIds = [...new Set(comments.map(c => c.reviewer_id))];
+      let reviewerMap = {};
+
+      if (reviewerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, name')
+          .in('user_id', reviewerIds);
+
+        if (profiles) {
+          reviewerMap = profiles.reduce((acc, p) => {
+            acc[p.user_id] = p.name;
+            return acc;
+          }, {});
+        }
+      }
+
+      const history = versions.map(v => ({
+        ...v,
+        comments: comments.filter(c => c.submission_id === v.id).map(c => ({
+          ...c,
+          reviewer_name: reviewerMap[c.reviewer_id] || 'Reviewer'
+        }))
+      }));
+
+      setSubmissionHistory(history);
+    } catch (error) {
+      console.error('Error fetching history:', error);
+    }
+  };
+
   const fetchStoredAnalysis = async (submissionId) => {
     try {
       const { data, error } = await supabase
@@ -145,6 +197,13 @@ export default function ReviewerDashboard() {
   const handleSelectReview = async (assignment) => {
     setSelectedReview(assignment);
     setComment('');
+
+    if (assignment.group_id) {
+      await fetchSubmissionHistory(assignment.group_id);
+    } else {
+      setSubmissionHistory([{ ...assignment, comments: [] }]);
+    }
+
     await fetchStoredAnalysis(assignment.id);
   };
 
@@ -470,6 +529,48 @@ export default function ReviewerDashboard() {
             </div>
             {selectedReview ? (
               <div className="flex flex-col max-h-[600px] overflow-y-auto">
+                {/* Submission History */}
+                <div className="p-4 border-b border-border bg-muted/10">
+                  <h3 className="font-semibold mb-4">Submission History</h3>
+                  <div className="space-y-6">
+                    {submissionHistory.map((versionItem) => (
+                      <div key={versionItem.id} className={`relative border-l-2 pl-4 pb-2 ${versionItem.id === selectedReview.id ? 'border-primary' : 'border-border'}`}>
+                        <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-4 border-background ${versionItem.id === selectedReview.id ? 'bg-primary' : 'bg-muted-foreground'}`} />
+
+                        <div className="mb-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className={`font-medium ${versionItem.id === selectedReview.id ? 'text-primary' : ''}`}>
+                              Version {versionItem.version}
+                              {versionItem.id === selectedReview.id && <span className="ml-2 text-xs bg-primary/10 px-2 py-0.5 rounded-full">Current</span>}
+                            </h4>
+                            <span className="text-xs text-muted-foreground">{new Date(versionItem.created_at).toLocaleString()}</span>
+                          </div>
+
+                          <div className="rounded bg-muted/30 p-2 max-h-[100px] overflow-hidden relative group">
+                            <pre className="text-xs font-mono text-muted-foreground opacity-70">{versionItem.code_content.slice(0, 150)}...</pre>
+                            <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background/10 to-transparent" />
+                          </div>
+                        </div>
+
+                        {/* Comments */}
+                        {versionItem.comments && versionItem.comments.length > 0 && (
+                          <div className="space-y-2 mt-2">
+                            {versionItem.comments.map(c => (
+                              <div key={c.id} className="bg-secondary/20 p-2 rounded text-sm">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="font-medium text-xs text-primary">{c.reviewer_name}</span>
+                                  <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <p className="whitespace-pre-wrap">{c.content}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Code View with Line Numbers */}
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-2 mb-2">
