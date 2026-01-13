@@ -4,10 +4,10 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  Mail,
+  Phone,
+  MapPin,
   Send,
   MessageSquare,
   Clock,
@@ -33,10 +33,10 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate form submission
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
+
     toast.success('Message sent successfully! We\'ll get back to you soon.');
     setFormData({ name: '', email: '', subject: '', message: '' });
     setIsSubmitting(false);
@@ -58,7 +58,7 @@ export default function Contact() {
     {
       icon: MapPin,
       title: 'Office',
-      value: 'San Francisco, CA',
+      value: 'JP Nagar, Bengaluru',
       description: 'Visit us at our HQ',
     },
   ];
@@ -85,7 +85,7 @@ export default function Contact() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center animate-slide-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
@@ -97,7 +97,7 @@ export default function Contact() {
               <span className="gradient-text">Hear From You</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Have questions about CodeReview? Want to learn more about our platform? 
+              Have questions about CodeReview? Want to learn more about our platform?
               We're here to help!
             </p>
           </div>
@@ -129,7 +129,7 @@ export default function Contact() {
       {/* Contact Form & FAQs */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto items-start">
             {/* Contact Form */}
             <div className="animate-fade-in">
               <div className="p-8 rounded-2xl border border-border bg-card card-shadow">
@@ -212,13 +212,13 @@ export default function Contact() {
               </div>
 
               {/* Response Time */}
-              <div className="mt-8 p-6 rounded-xl bg-primary/5 border border-primary/20">
+              <div className="mt-4 p-6 rounded-xl bg-primary/5 border border-primary/20">
                 <div className="flex items-start gap-4">
                   <Clock className="h-6 w-6 text-primary flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold mb-1">Quick Response Time</h3>
                     <p className="text-sm text-muted-foreground">
-                      Our team typically responds within 24 hours during business days. 
+                      Our team typically responds within 24 hours during business days.
                       For urgent matters, please call our support line.
                     </p>
                   </div>

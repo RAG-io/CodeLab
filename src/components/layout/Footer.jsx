@@ -50,7 +50,7 @@ export default function Footer() {
             <h3 className="font-semibold mb-4">Connect</h3>
             <div className="flex gap-4">
               <a
-                href="#"
+                href="https://github.com/RAG-io"
                 className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                 aria-label="GitHub"
               >
