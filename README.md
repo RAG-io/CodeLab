@@ -1,14 +1,16 @@
 # Code Lab
 
-Code Lab is a modern code review and project management platform built for developers, reviewers, and administrators. It facilitates seamless code submission, review processes, and system administration.
+CodeLab is a modern code review and project management platform built for developers, reviewers, and administrators. It facilitates seamless code submission, review processes, and system administration.
 
 ## Features
 
 - **Role-Based Access Control**:
-  - **Developer Dashboard**: Submit code, track submission status, and manage profile variables.
-  - **Reviewer Dashboard**: Review submitted code, provide feedback, and manage review queues.
-  - **Admin Dashboard**: Comprehensive system management, user oversight, and activity logging.
-- **Authentication**: Secure login and registration flows.
+  - **Developer Dashboard**: Submit code, track submission status, view version history with comments, and manage profile variables.
+  - **Reviewer Dashboard**: Review submitted code, view submission history, provide feedback with preserved formatting, and manage review queues.
+  - **Admin Dashboard**: Comprehensive system management, user oversight (with delete capability), and activity logging.
+- **Submission Versioning**: Track changes across multiple submissions with a complete history view.
+- **Profile Management**: Update user details and avatars.
+- **Authentication**: Secure login and registration flows via Supabase.
 - **Modern UI**: Built with Shadcn UI and Tailwind CSS for a responsive, clean experience.
 - **Real-time Updates**: Powered by React Query for efficient data fetching.
 
@@ -18,7 +20,7 @@ Code Lab is a modern code review and project management platform built for devel
 - **Styling**: Tailwind CSS, Shadcn UI
 - **State/Data**: React Query, Context API
 - **Backend/Auth**: Supabase
-- **Routing**: React Router DOM
+- **Routing**: React Router DOM (with Scroll Restoration)
 
 ## Getting Started
 
@@ -41,10 +43,10 @@ Code Lab is a modern code review and project management platform built for devel
    ```
 
 3. Configure Environment Variables:
-   Create a `.env` file in the root directory and add your Supabase credentials (and any other required variables):
+   Create a `.env` file in the root directory and add your Supabase credentials:
    ```env
    VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
    ```
 
 4. Run the development server:
