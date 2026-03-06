@@ -33,7 +33,7 @@ CodeLab is a modern code review and project management platform built for develo
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/code-lab.git
+   git clone https://github.com/RAG-io/code-lab.git
    cd code-lab
    ```
 
