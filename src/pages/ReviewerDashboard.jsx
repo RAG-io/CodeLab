@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '../contexts/AuthContext';
+import { reviewService } from '../services/reviewService';
+import { submissionService } from '../services/submissionService';
 import Layout from '../components/layout/Layout';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
@@ -42,40 +43,7 @@ export default function ReviewerDashboard() {
 
   const fetchAssignments = async () => {
     try {
-      // Fetch all pending/in_review submissions for reviewers
-      const { data: subs, error } = await supabase
-        .from('code_submissions')
-        .select('*')
-        .or(`reviewer_id.eq.${user.id},reviewer_id.is.null`)
-        .in('status', ['pending', 'in_review'])
-        .eq('is_latest', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch developer names separately
-      const developerIds = [...new Set(subs.map(s => s.developer_id))];
-      let developerMap = {};
-
-      if (developerIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, name')
-          .in('user_id', developerIds);
-
-        if (profiles) {
-          developerMap = profiles.reduce((acc, p) => {
-            acc[p.user_id] = p.name;
-            return acc;
-          }, {});
-        }
-      }
-
-      const enrichedSubs = subs.map(s => ({
-        ...s,
-        developer: { name: developerMap[s.developer_id] || 'Unknown' }
-      }));
-
+      const enrichedSubs = await reviewService.getReviewerSubmissions(user.id);
       setAssignments(enrichedSubs || []);
     } catch (error) {
       console.error('Error fetching assignments:', error);
@@ -87,39 +55,7 @@ export default function ReviewerDashboard() {
 
   const fetchCompletedReviews = async () => {
     try {
-      // Fetch completed submissions reviewed by this reviewer
-      const { data: subs, error } = await supabase
-        .from('code_submissions')
-        .select('*')
-        .eq('reviewer_id', user.id)
-        .in('status', ['approved', 'changes_requested'])
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch developer names separately
-      const developerIds = [...new Set(subs.map(s => s.developer_id))];
-      let developerMap = {};
-
-      if (developerIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, name')
-          .in('user_id', developerIds);
-
-        if (profiles) {
-          developerMap = profiles.reduce((acc, p) => {
-            acc[p.user_id] = p.name;
-            return acc;
-          }, {});
-        }
-      }
-
-      const enrichedSubs = subs.map(s => ({
-        ...s,
-        developer: { name: developerMap[s.developer_id] || 'Unknown' }
-      }));
-
+      const enrichedSubs = await reviewService.getReviewerHistory(user.id);
       setCompletedReviews(enrichedSubs || []);
     } catch (error) {
       console.error('Error fetching completed reviews:', error);
@@ -130,48 +66,7 @@ export default function ReviewerDashboard() {
 
   const fetchSubmissionHistory = async (groupId) => {
     try {
-      const { data: versions, error: versionsError } = await supabase
-        .from('code_submissions')
-        .select('*')
-        .eq('group_id', groupId)
-        .order('version', { ascending: true });
-
-      if (versionsError) throw versionsError;
-
-      const versionIds = versions.map(v => v.id);
-      const { data: comments, error: commentsError } = await supabase
-        .from('review_comments')
-        .select('*')
-        .in('submission_id', versionIds)
-        .order('created_at', { ascending: true });
-
-      if (commentsError) throw commentsError;
-
-      const reviewerIds = [...new Set(comments.map(c => c.reviewer_id))];
-      let reviewerMap = {};
-
-      if (reviewerIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, name')
-          .in('user_id', reviewerIds);
-
-        if (profiles) {
-          reviewerMap = profiles.reduce((acc, p) => {
-            acc[p.user_id] = p.name;
-            return acc;
-          }, {});
-        }
-      }
-
-      const history = versions.map(v => ({
-        ...v,
-        comments: comments.filter(c => c.submission_id === v.id).map(c => ({
-          ...c,
-          reviewer_name: reviewerMap[c.reviewer_id] || 'Reviewer'
-        }))
-      }));
-
+      const history = await submissionService.getSubmissionHistory(groupId);
       setSubmissionHistory(history);
     } catch (error) {
       console.error('Error fetching history:', error);
@@ -180,13 +75,7 @@ export default function ReviewerDashboard() {
 
   const fetchStoredAnalysis = async (submissionId) => {
     try {
-      const { data, error } = await supabase
-        .from('static_analysis_results')
-        .select('*')
-        .eq('submission_id', submissionId)
-        .order('line_number', { ascending: true });
-
-      if (error) throw error;
+      const data = await submissionService.getAnalysisResults(submissionId);
       setStoredAnalysisResults(data || []);
     } catch (error) {
       console.error('Error fetching analysis:', error);
@@ -267,15 +156,7 @@ export default function ReviewerDashboard() {
 
   const handleStartReview = async (assignment) => {
     try {
-      const { error } = await supabase
-        .from('code_submissions')
-        .update({
-          status: 'in_review',
-          reviewer_id: user.id
-        })
-        .eq('id', assignment.id);
-
-      if (error) throw error;
+      await reviewService.updateSubmissionStatus(assignment.id, 'in_review');
 
       setAssignments(assignments.map(a =>
         a.id === assignment.id ? { ...a, status: 'in_review', reviewer_id: user.id } : a
@@ -291,27 +172,7 @@ export default function ReviewerDashboard() {
   // Save static analysis results to the database
   const saveAnalysisResults = async (submissionId, analysisIssues) => {
     try {
-      // Delete existing results for this submission
-      await supabase
-        .from('static_analysis_results')
-        .delete()
-        .eq('submission_id', submissionId);
-
-      if (analysisIssues.length > 0) {
-        const results = analysisIssues.map(issue => ({
-          submission_id: submissionId,
-          line_number: issue.line,
-          rule_id: issue.rule,
-          message: issue.message,
-          severity: issue.type === 'error' ? 'error' : issue.type === 'warning' ? 'warning' : 'info',
-        }));
-
-        const { error } = await supabase
-          .from('static_analysis_results')
-          .insert(results);
-
-        if (error) throw error;
-      }
+      await reviewService.saveAnalysisResults(submissionId, analysisIssues);
     } catch (error) {
       console.error('Error saving analysis results:', error);
     }
@@ -325,23 +186,11 @@ export default function ReviewerDashboard() {
       // Save analysis results first
       await saveAnalysisResults(selectedReview.id, analysisIssues);
 
-      const { error } = await supabase
-        .from('code_submissions')
-        .update({
-          status: 'approved',
-          reviewer_id: user.id // Ensure we claim it if we haven't already
-        })
-        .eq('id', selectedReview.id);
-
-      if (error) throw error;
+      await reviewService.updateSubmissionStatus(selectedReview.id, 'approved');
 
       // Add comment if provided
       if (comment.trim()) {
-        await supabase.from('review_comments').insert({
-          submission_id: selectedReview.id,
-          reviewer_id: user.id,
-          content: comment,
-        });
+        await reviewService.addReviewComment(selectedReview.id, user.id, comment);
       }
 
       toast.success('Code approved!');
@@ -370,19 +219,10 @@ export default function ReviewerDashboard() {
       // Save analysis results first
       await saveAnalysisResults(selectedReview.id, analysisIssues);
 
-      const { error } = await supabase
-        .from('code_submissions')
-        .update({ status: 'changes_requested' })
-        .eq('id', selectedReview.id);
-
-      if (error) throw error;
+      await reviewService.updateSubmissionStatus(selectedReview.id, 'changes_requested');
 
       // Add comment
-      await supabase.from('review_comments').insert({
-        submission_id: selectedReview.id,
-        reviewer_id: user.id,
-        content: comment,
-      });
+      await reviewService.addReviewComment(selectedReview.id, user.id, comment);
 
       toast.success('Changes requested - notification sent to developer');
       setSelectedReview(null);

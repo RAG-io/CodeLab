@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { authService } from '../services/authService';
 import Layout from '../components/layout/Layout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -29,27 +29,31 @@ export default function Auth() {
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        redirectToDashboard(session.user.id);
+      try {
+        const session = await authService.getSession();
+        if (session) {
+          redirectToDashboard(session.user.id);
+        }
+      } catch (error) {
+        console.error('Session check error', error);
       }
     };
     checkUser();
   }, []);
 
   const redirectToDashboard = async (userId) => {
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (roleData?.role === 'admin') {
-      navigate('/admin');
-    } else if (roleData?.role === 'reviewer') {
-      navigate('/reviewer');
-    } else {
-      navigate('/developer');
+    try {
+      const role = await authService.getUserRole(userId);
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'reviewer') {
+        navigate('/reviewer');
+      } else {
+        navigate('/developer');
+      }
+    } catch (error) {
+      console.error('Error fetching role', error);
+      navigate('/developer'); // default
     }
   };
 
@@ -67,41 +71,11 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: form.email.trim(),
-          password: form.password,
-        });
-
-        if (error) throw error;
-
+        const data = await authService.signIn(form.email.trim(), form.password);
         toast.success('Logged in successfully!');
         redirectToDashboard(data.user.id);
       } else {
-        // console.log('Attempting to register with email:', `"${form.email.trim()}"`);
-        const { data, error } = await supabase.auth.signUp({
-          email: form.email.trim(),
-          password: form.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              name: form.name,
-            },
-          },
-        });
-
-        if (error) throw error;
-
-        // Create user role
-        if (data.user) {
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert({ user_id: data.user.id, role: form.role });
-
-          if (roleError) {
-            console.error('Role creation error:', roleError);
-          }
-        }
-
+        const data = await authService.signUp(form.email.trim(), form.password, form.name, form.role);
         toast.success('Account created successfully!');
         redirectToDashboard(data.user.id);
       }
@@ -202,8 +176,8 @@ export default function Auth() {
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium mb-2">Role</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['developer', 'reviewer', 'admin'].map((role) => (
+                <div className="grid grid-cols-2 gap-2">
+                  {['developer', 'reviewer'].map((role) => (
                     <button
                       key={role}
                       type="button"

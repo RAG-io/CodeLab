@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { toast } from 'sonner';
@@ -55,9 +55,6 @@ export default function Register() {
 
     // Redirect based on role
     switch (formData.role) {
-      case 'admin':
-        navigate('/admin');
-        break;
       case 'reviewer':
         navigate('/reviewer');
         break;
@@ -158,7 +155,6 @@ export default function Register() {
               >
                 <option value="developer">Developer</option>
                 <option value="reviewer">Reviewer</option>
-                <option value="admin">Administrator</option>
               </select>
             </div>
 

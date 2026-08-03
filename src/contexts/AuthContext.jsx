@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { authService } from '../services/authService';
+import { profileService } from '../services/profileService';
 
 const AuthContext = createContext(null);
 
@@ -10,30 +11,27 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = authService.onAuthStateChange(
       (event, session) => {
         setSession(session);
         
         if (session?.user) {
           // Defer fetching user data to avoid deadlock
           setTimeout(async () => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-            
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
+            let profile;
+            let role;
+            try {
+              profile = await profileService.getProfile(session.user.id);
+              role = await authService.getUserRole(session.user.id);
+            } catch (err) {
+              console.error('Failed to fetch user context data', err);
+            }
             
             setUser({
               id: session.user.id,
               email: session.user.email,
               name: profile?.name || session.user.email,
-              role: roleData?.role || 'developer',
+              role: role || 'developer',
               avatar: profile?.avatar_url,
             });
             setLoading(false);
@@ -46,18 +44,18 @@ export function AuthProvider({ children }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authService.getSession().then((session) => {
       setSession(session);
       if (!session) {
         setLoading(false);
       }
-    });
+    }).catch(() => setLoading(false));
 
     return () => subscription.unsubscribe();
   }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await authService.signOut();
     setUser(null);
     setSession(null);
   };

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '../contexts/AuthContext';
+import { adminService } from '../services/adminService';
+import { submissionService } from '../services/submissionService';
 import Layout from '../components/layout/Layout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -53,67 +54,11 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      // Fetch all users with their roles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-
-      if (profilesError) throw profilesError;
-
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
-
-      if (rolesError) throw rolesError;
-
-      // Merge profiles with roles
-      const usersWithRoles = profiles.map(profile => {
-        const userRole = roles.find(r => r.user_id === profile.user_id);
-        return {
-          ...profile,
-          role: userRole?.role || 'developer',
-        };
-      });
-
+      const usersWithRoles = await adminService.getUsers();
       setUsers(usersWithRoles);
       setReviewers(usersWithRoles.filter(u => u.role === 'reviewer'));
 
-      // Fetch all submissions without FK hints
-      const { data: subs, error: subsError } = await supabase
-        .from('code_submissions')
-        .select('*')
-        .eq('is_latest', true)
-        .order('created_at', { ascending: false });
-
-      if (subsError) throw subsError;
-
-      // Fetch developer and reviewer names separately
-      const allUserIds = [...new Set([
-        ...subs.map(s => s.developer_id),
-        ...subs.filter(s => s.reviewer_id).map(s => s.reviewer_id)
-      ])];
-
-      let userMap = {};
-      if (allUserIds.length > 0) {
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('user_id, name')
-          .in('user_id', allUserIds);
-
-        if (profilesData) {
-          userMap = profilesData.reduce((acc, p) => {
-            acc[p.user_id] = p.name;
-            return acc;
-          }, {});
-        }
-      }
-
-      const enrichedSubs = subs.map(s => ({
-        ...s,
-        developer: { name: userMap[s.developer_id] || 'Unknown' },
-        reviewer: s.reviewer_id ? { name: userMap[s.reviewer_id] } : null
-      }));
-
+      const enrichedSubs = await adminService.getSubmissions();
       setSubmissions(enrichedSubs || []);
 
       // Generate activity logs from submissions
@@ -140,13 +85,7 @@ export default function AdminDashboard() {
 
   const fetchAnalysisResults = async (submissionId) => {
     try {
-      const { data, error } = await supabase
-        .from('static_analysis_results')
-        .select('*')
-        .eq('submission_id', submissionId)
-        .order('line_number', { ascending: true });
-
-      if (error) throw error;
+      const data = await submissionService.getAnalysisResults(submissionId);
       setAnalysisResults(data || []);
     } catch (error) {
       console.error('Error fetching analysis:', error);
@@ -228,15 +167,7 @@ export default function AdminDashboard() {
     const randomReviewer = reviewers[Math.floor(Math.random() * reviewers.length)];
 
     try {
-      const { error } = await supabase
-        .from('code_submissions')
-        .update({
-          reviewer_id: randomReviewer.user_id,
-          status: 'in_review'
-        })
-        .eq('id', submissionId);
-
-      if (error) throw error;
+      await adminService.assignReviewer(submissionId, randomReviewer.user_id);
 
       toast.success(`Assigned to ${randomReviewer.name}`);
       fetchData();
@@ -252,9 +183,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const { error } = await supabase.rpc('delete_user', { target_user_id: userId });
-
-      if (error) throw error;
+      await adminService.deleteUser(userId);
 
       toast.success('User deleted successfully');
       fetchData(); // Refresh the list
@@ -289,7 +218,7 @@ export default function AdminDashboard() {
 
   // Dashboard Sidebar Component
   const Sidebar = () => (
-    <div className="w-64 bg-card border-r border-border h-[calc(100vh-4rem)] flex flex-col fixed left-0 top-16 text-card-foreground">
+    <div className="w-64 bg-card border-r border-border h-[calc(100vh-4rem)] flex flex-col sticky top-16 shrink-0 text-card-foreground">
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-primary/10">
@@ -353,7 +282,7 @@ export default function AdminDashboard() {
       <div className="flex min-h-[calc(100vh-4rem)]">
         <Sidebar />
 
-        <main className="flex-1 ml-64 p-8">
+        <main className="flex-1 p-8 min-w-0">
           <div className="max-w-7xl mx-auto">
             {/* Top Bar for Mobile/Filter could go here, keeping it simple for now */}
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '../contexts/AuthContext';
+import { profileService } from '../services/profileService';
 import Layout from '../components/layout/Layout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -37,12 +37,7 @@ export default function Profile() {
 
         setLoading(true);
         try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({ name: formData.name })
-                .eq('user_id', user.id);
-
-            if (error) throw error;
+            await profileService.updateProfile(user.id, { name: formData.name });
 
             toast.success('Profile updated successfully! Refresh to see changes in header.');
             setIsEditing(false);

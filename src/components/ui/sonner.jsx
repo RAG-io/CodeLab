@@ -1,5 +1,5 @@
 import { Toaster as Sonner } from "sonner";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Toaster = ({ ...props }) => {
   const { theme } = useTheme();

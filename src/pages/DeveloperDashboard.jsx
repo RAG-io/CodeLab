@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '../contexts/AuthContext';
+import { submissionService } from '../services/submissionService';
 import Layout from '../components/layout/Layout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -55,37 +55,7 @@ export default function DeveloperDashboard() {
 
   const fetchSubmissions = async () => {
     try {
-      // Fetch submissions without the invalid FK hint
-      const { data: subs, error } = await supabase
-        .from('code_submissions')
-        .select('*')
-        .eq('developer_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch reviewer names separately
-      const reviewerIds = [...new Set(subs.filter(s => s.reviewer_id).map(s => s.reviewer_id))];
-      let reviewerMap = {};
-
-      if (reviewerIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, name')
-          .in('user_id', reviewerIds);
-
-        if (profiles) {
-          reviewerMap = profiles.reduce((acc, p) => {
-            acc[p.user_id] = p.name;
-            return acc;
-          }, {});
-        }
-      }
-
-      const enrichedSubs = subs.map(s => ({
-        ...s,
-        reviewer: s.reviewer_id ? { name: reviewerMap[s.reviewer_id] } : null
-      }));
+      const enrichedSubs = await submissionService.getDeveloperSubmissions(user.id);
 
       // Group submissions by group_id and select the latest version for each group
       const latestSubmissionsMap = new Map();
@@ -111,13 +81,7 @@ export default function DeveloperDashboard() {
 
   const fetchAnalysisResults = async (submissionId) => {
     try {
-      const { data, error } = await supabase
-        .from('static_analysis_results')
-        .select('*')
-        .eq('submission_id', submissionId)
-        .order('line_number', { ascending: true });
-
-      if (error) throw error;
+      const data = await submissionService.getAnalysisResults(submissionId);
       setAnalysisResults(data || []);
     } catch (error) {
       console.error('Error fetching analysis:', error);
@@ -125,93 +89,13 @@ export default function DeveloperDashboard() {
     }
   };
 
-  const fetchReviewComments = async (submissionId) => {
-    try {
-      const { data: comments, error } = await supabase
-        .from('review_comments')
-        .select('*')
-        .eq('submission_id', submissionId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      // Fetch reviewer names
-      if (comments && comments.length > 0) {
-        const reviewerIds = [...new Set(comments.map(c => c.reviewer_id))];
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, name')
-          .in('user_id', reviewerIds);
-
-        const reviewerMap = profiles?.reduce((acc, p) => {
-          acc[p.user_id] = p.name;
-          return acc;
-        }, {}) || {};
-
-        const enrichedComments = comments.map(c => ({
-          ...c,
-          reviewer_name: reviewerMap[c.reviewer_id] || 'Reviewer'
-        }));
-        setReviewComments(enrichedComments);
-      } else {
-        setReviewComments([]);
-      }
-    } catch (error) {
-      console.error('Error fetching review comments:', error);
-      setReviewComments([]);
-    }
-  };
+  // fetchReviewComments removed, will be handled by submission history
 
   const [submissionHistory, setSubmissionHistory] = useState([]);
 
   const fetchSubmissionHistory = async (groupId) => {
     try {
-      // 1. Fetch all versions for this group
-      const { data: versions, error: versionsError } = await supabase
-        .from('code_submissions')
-        .select('*')
-        .eq('group_id', groupId)
-        .order('version', { ascending: true });
-
-      if (versionsError) throw versionsError;
-
-      // 2. Fetch comments for ALL versions
-      const versionIds = versions.map(v => v.id);
-      const { data: comments, error: commentsError } = await supabase
-        .from('review_comments')
-        .select('*')
-        .in('submission_id', versionIds)
-        .order('created_at', { ascending: true });
-
-      if (commentsError) throw commentsError;
-
-      // 3. Helper to fetch reviewer names (deduplicated)
-      const reviewerIds = [...new Set(comments.map(c => c.reviewer_id))];
-      let reviewerMap = {};
-
-      if (reviewerIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, name')
-          .in('user_id', reviewerIds);
-
-        if (profiles) {
-          reviewerMap = profiles.reduce((acc, p) => {
-            acc[p.user_id] = p.name;
-            return acc;
-          }, {});
-        }
-      }
-
-      // 4. Combine versions with their specific comments
-      const history = versions.map(v => ({
-        ...v,
-        comments: comments.filter(c => c.submission_id === v.id).map(c => ({
-          ...c,
-          reviewer_name: reviewerMap[c.reviewer_id] || 'Reviewer'
-        }))
-      }));
-
+      const history = await submissionService.getSubmissionHistory(groupId);
       setSubmissionHistory(history);
     } catch (error) {
       console.error('Error fetching history:', error);
@@ -292,36 +176,25 @@ export default function DeveloperDashboard() {
     setSubmitting(true);
     try {
       if (isEditing && currentGroupId) {
-        // RESUBMITTING: Create a NEW version (INSERT) instead of updating
-        const { error } = await supabase
-          .from('code_submissions')
-          .insert({
+        await submissionService.createSubmission({
             title: uploadForm.title,
             description: uploadForm.description,
             file_name: uploadForm.fileName || 'code.js',
             code_content: uploadForm.code,
             status: 'pending',
             developer_id: user.id,
-            group_id: currentGroupId, // Link to the same group
-            version: currentVersion + 1 // Increment version
-          });
-
-        if (error) throw error;
+            group_id: currentGroupId,
+            version: currentVersion + 1
+        });
         toast.success('New version submitted successfully!');
       } else {
-        // NEW SUBMISSION
-        const { error } = await supabase
-          .from('code_submissions')
-          .insert({
+        await submissionService.createSubmission({
             title: uploadForm.title,
             description: uploadForm.description,
             file_name: uploadForm.fileName || 'code.js',
             code_content: uploadForm.code,
             developer_id: user.id,
-            // version defaults to 1, group_id defaults to random UUID
-          });
-
-        if (error) throw error;
+        });
         toast.success('Code submitted for review!');
       }
 
@@ -344,18 +217,7 @@ export default function DeveloperDashboard() {
     if (!confirm('Are you sure you want to delete this submission? This action cannot be undone.')) return;
 
     try {
-      // The database handles cascading deletes for related records (comments, analysis results)
-      const { error, count } = await supabase
-        .from('code_submissions')
-        .delete({ count: 'exact' }) // Request count of deleted rows
-        .eq('id', submissionId)
-        .eq('developer_id', user.id);
-
-      if (error) throw error;
-
-      if (count === 0) {
-        throw new Error('Submission not found or could not be deleted');
-      }
+      await submissionService.deleteSubmission(submissionId, user.id);
 
       toast.success('Submission deleted successfully');
       // 3. Update local state immediately for better UX
