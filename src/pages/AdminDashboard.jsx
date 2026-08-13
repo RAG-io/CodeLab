@@ -279,7 +279,7 @@ export default function AdminDashboard() {
 
   return (
     <Layout>
-      <div className="flex min-h-[calc(100vh-4rem)]">
+      <div className="container mx-auto px-4 flex min-h-[calc(100vh-4rem)]">
         <Sidebar />
 
         <main className="flex-1 p-8 min-w-0">
@@ -494,7 +494,7 @@ export default function AdminDashboard() {
                                 <td className="p-4">
                                   {s.reviewer?.name ? (
                                     <span className="text-muted-foreground">{s.reviewer.name}</span>
-                                  ) : (
+                                  ) : s.status === 'pending' ? (
                                     <Button
                                       size="sm"
                                       variant="outline"
@@ -502,6 +502,8 @@ export default function AdminDashboard() {
                                     >
                                       Assign Reviewer
                                     </Button>
+                                  ) : (
+                                    <span className="text-muted-foreground">Unassigned</span>
                                   )}
                                 </td>
                                 <td className="p-4">{getStatusBadge(s.status)}</td>

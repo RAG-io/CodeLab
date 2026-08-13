@@ -47,3 +47,19 @@ coverage/
 # Temporary
 .tmp
 .temp
+
+# Deployment/Hosting
+.vercel
+.netlify
+.serverless
+out/
+
+# Caches
+.eslintcache
+.vite
+.next
+.swc
+
+# Supabase
+supabase/.temp
+supabase/functions
